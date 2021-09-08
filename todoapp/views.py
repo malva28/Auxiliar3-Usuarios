@@ -4,6 +4,11 @@ from django.shortcuts import render, redirect
 # Create your views here.
 from todoapp.models import Tarea
 from categorias.models import Categoria
+from django.http import HttpResponseRedirect
+
+#Estos son los imports que van al inicio de views.py
+from todoapp.models import User
+from django.contrib.auth import authenticate, login,logout
 
 
 def tareas(request):  # the index view
@@ -22,3 +27,41 @@ def tareas(request):  # the index view
             nueva_tarea = Tarea(titulo=titulo, contenido=contenido, categoria=categoria)  # Crear la tarea
             nueva_tarea.save()  # guardar la tarea en la base de datos.
             return redirect("/tareas")  # recargar la página.
+
+
+def register_user(request):
+    if request.method == 'GET':  # Si estamos cargando la página
+        return render(request,"todoapp/register_user.html")
+
+    elif request.method == 'POST':  # Si estamos recibiendo el form de registro
+        # Tomar los elementos del formulario que vienen en request.POST
+        nombre = request.POST['nombre']
+        contraseña = request.POST['contraseña']
+        apodo = request.POST['apodo']
+        pronombre = request.POST['pronombre']
+        mail = request.POST['mail']
+
+        # Crear el nuevo usuario
+        user = User.objects.create_user(username=nombre, password=contraseña, email=mail, apodo=apodo,
+                                        pronombre=pronombre)
+
+        # Redireccionar la página /tareas
+        return HttpResponseRedirect('/tareas')
+
+
+def login_user(request):
+    if request.method == 'GET':
+        return render(request,"todoapp/login.html")
+    if request.method == 'POST':
+        username = request.POST['username']
+        contraseña = request.POST['contraseña']
+        usuario = authenticate(username=username, password=contraseña)
+        if usuario is not None:
+            login(request, usuario)
+            return HttpResponseRedirect('/tareas')
+        else:
+            return HttpResponseRedirect('/register')
+
+def logout_user(request):
+    logout(request)
+    return HttpResponseRedirect('/tareas')
